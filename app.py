@@ -42,14 +42,16 @@ with col3:
 with col4:
     overs = st.number_input('Overs completed', min_value=0.0, step=0.1)
 with col5:
-    wickets = st.number_input('Wickets out', min_value=0, max_value=10)
+    wickets_out = st.number_input('Wickets out', min_value=0, max_value=10)
 
 if st.button('Predict Probability'):
     runs_left = target - score
     balls_left = 120 - int(overs * 6)
-    wickets = 10 - wickets
+    wickets_left = 10 - wickets_out
     crr = score / overs if overs > 0 else 0
     rrr = (runs_left * 6) / balls_left if balls_left > 0 else 0
+    required_strike_rate = (runs_left / wickets_left) * 100 if wickets_left > 0 else 0
+    current_strike_rate = (score / wickets_out) * 100 if wickets_out > 0 else 0
 
     input_df = pd.DataFrame({
         'batting_team': [batting_team],
@@ -57,10 +59,12 @@ if st.button('Predict Probability'):
         'city': [selected_city],
         'runs_left': [runs_left],
         'balls_left': [balls_left],
-        'wickets': [wickets],
+        'wickets_left': [wickets_left],
         'total_runs_x': [target],
         'crr': [crr],
-        'rrr': [rrr]
+        'rrr': [rrr],
+        'required_strike_rate': [required_strike_rate],
+        'current_strike_rate': [current_strike_rate]
     })
 
     result = pipe.predict_proba(input_df)
@@ -69,3 +73,8 @@ if st.button('Predict Probability'):
 
     st.header(f"{batting_team} - {round(win * 100)}%")
     st.header(f"{bowling_team} - {round(loss * 100)}%")
+
+    st.write(f"Balls Left: {balls_left}")
+    st.write(f"Required Strike Rate: {required_strike_rate:.2f}")
+    st.write(f"Current Strike Rate: {current_strike_rate:.2f}")
+    st.write(f"Wickets Left: {wickets_left}")
